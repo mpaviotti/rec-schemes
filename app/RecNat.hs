@@ -22,16 +22,16 @@ instance (Num (Fix NatF)) where
   x * y = foldParam palg (x, y)
     where
       palg :: (NatF (Fix NatF -> Fix NatF), Fix NatF) -> Fix NatF
-      palg (ZeroF,   y')    = zero
+      palg (ZeroF,   _)    = zero
       palg (SuccF f, y')    = f y' + y'
 
   (-) :: Fix NatF -> Fix NatF -> Fix NatF
   x - y = paramWithParam ppalg (x, y)
     where
-      ppalg :: (NatF (Fix NatF -> (Fix NatF, Fix NatF)), Fix NatF) -> Fix NatF
-      ppalg (ZeroF,   m)              = zero
-      ppalg (SuccF f, In ZeroF)       = let (x, _) = f zero in x
-      ppalg (SuccF f, In (SuccF m'))  = let (_, x) = f m' in x
+      ppalg :: ((NatF (Fix NatF -> Fix NatF), Fix NatF), Fix NatF) -> Fix NatF
+      ppalg ((ZeroF,   _), _)              = zero
+      ppalg ((SuccF _, copy), In ZeroF)    = copy
+      ppalg ((SuccF f, _), In (SuccF m'))  = f m'
 
   abs :: Fix NatF -> Fix NatF
   abs = id
@@ -44,8 +44,6 @@ instance (Num (Fix NatF)) where
   fromInteger n | n > 0 = succ (fromInteger (n - 1))
   fromInteger n | n < 0 = error "undefined: negative integer is not natural."
 
-paramWithParam :: (Functor f) =>  ((f (p -> (Fix f, y)), p) -> y) -> (Fix f, p) -> y
-paramWithParam alg (In x, p) = alg ((fmap (\x' -> (\p -> (In x, (paramWithParam alg (x', p))))) x), p)
 
 remainder :: Fix NatF -> Fix NatF -> Fix NatF
 remainder x y = foldParam palg (x, y)

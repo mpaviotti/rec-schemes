@@ -43,6 +43,9 @@ para alg = alg . (fmap ((para alg) /\ id)) . inOp
 foldParam :: Functor f => ((f (a -> b), a) -> b) -> (Fix f, a) -> b
 foldParam alg = alg . fmapPLeft (fmap ((\g -> (foldParam alg) . g) . (\x y -> (x,y))) . inOp)
 
+paramWithParam :: Functor f =>  (((f (p -> y), Fix f), p) -> y) -> (Fix f, p) -> y
+paramWithParam alg = alg . fmapPLeft ((fmap (\x' -> (\p -> (paramWithParam alg (x', p)))) . inOp) /\ id)
+
 proj1 :: (a, b) -> a
 proj1 (x, y) = x
 
