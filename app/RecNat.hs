@@ -44,7 +44,6 @@ instance (Num (Fix NatF)) where
   fromInteger n | n > 0 = succ (fromInteger (n - 1))
   fromInteger n | n < 0 = error "undefined: negative integer is not natural."
 
-
 remainder :: Fix NatF -> Fix NatF -> Fix NatF
 remainder x y = foldParam palg (x, y)
   where
@@ -77,13 +76,33 @@ succ n = In (SuccF n)
 
 zero :: Fix NatF
 zero  = In ZeroF
+
+one :: Fix NatF
 one   = succ zero
+
+two :: Fix NatF
 two   = succ one
+
+three :: Fix NatF
 three = succ two
+
+four :: Fix NatF
 four  = succ three
+
+five :: Fix NatF
 five  = succ four
+
+six :: Fix NatF
 six   = succ six
+
+seven :: Fix NatF
 seven = succ six
+
+eight :: Fix NatF
 eight = succ seven
+
+nine :: Fix NatF
 nine  = succ eight
+
+ten :: Fix NatF
 ten   = succ nine

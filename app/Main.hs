@@ -12,8 +12,15 @@ import Prelude hiding (pi, repeat, head, tail, filter, iterate, succ)
 import Fibonacci
 import Factorial
 import Ackermann
+import RecNat
 
-main = print fibStream
+main :: IO ()
+main = do {
+  print fibStream;
+  print $ "Mutu Factorial 3: " ++ show (factM 3);
+  print $ "Mutu Factorial 3 with Recursion Schemes: " ++ show (factMutu three);
+  }
+
 
 (===) :: a -> a -> a
 x === y = y

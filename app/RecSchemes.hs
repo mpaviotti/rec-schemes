@@ -34,7 +34,9 @@ fold alg = alg . fmap (fold alg) . inOp
 fmapPLeft :: (x -> x') -> (x, y) -> (x', y)
 fmapPLeft f (x, y) = (f x, y)
 
-{- Paramorphism -}
+{- Paramorphism
+Δ ⊣ ×
+-}
 para :: Functor f => (f (b, Fix f) -> b) -> Fix f -> b
 para alg = alg . (fmap ((para alg) /\ id)) . inOp
 
@@ -43,6 +45,10 @@ para alg = alg . (fmap ((para alg) /\ id)) . inOp
 foldParam :: Functor f => ((f (a -> b), a) -> b) -> (Fix f, a) -> b
 foldParam alg = alg . fmapPLeft (fmap ((\g -> (foldParam alg) . g) . (\x y -> (x,y))) . inOp)
 
+{-
+Paramorphisms with parameters
+Δ (- x A) ⊣ (-)^{A} (×)
+-}
 paramWithParam :: Functor f =>  (((f (p -> y), Fix f), p) -> y) -> (Fix f, p) -> y
 paramWithParam alg = alg . fmapPLeft ((fmap (\x' -> (\p -> (paramWithParam alg (x', p)))) . inOp) /\ id)
 
@@ -66,3 +72,9 @@ rsfcc calg = chead . fold (fmap calg . lambda . (fmap comult))
   where
     lambda :: Functor g => g (CoFree g a) -> CoFree g (g a)
     lambda = fmap (fmap chead) . coeval (fmap ctail)
+
+unfold :: (Functor f) => (a -> f a) -> a -> CoFix f
+unfold coalg = OutOp . fmap (unfold coalg) . coalg
+
+hylo :: (Functor f) => (f b -> b) -> (a -> f a) -> a -> b
+hylo alg coalg = alg . fmap (hylo alg coalg) . coalg
