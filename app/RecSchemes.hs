@@ -42,7 +42,7 @@ para alg = alg . (fmap ((para alg) /\ id)) . inOp
 
 {- Fold with parameters -}
 {- (- x A) ⊣ (-)^{A} -}
-foldParam :: Functor f => ((f (a -> b), a) -> b) -> (Fix f, a) -> b
+foldParam :: Functor f => ((f (p -> b), p) -> b) -> (Fix f, p) -> b
 foldParam alg = alg . fmapPLeft (fmap ((\g -> (foldParam alg) . g) . (\x y -> (x,y))) . inOp)
 
 {-
@@ -78,3 +78,19 @@ unfold coalg = OutOp . fmap (unfold coalg) . coalg
 
 hylo :: (Functor f) => (f b -> b) -> (a -> f a) -> a -> b
 hylo alg coalg = alg . fmap (hylo alg coalg) . coalg
+
+
+-- Exercise, foldr, foldl and foldl using foldr
+
+foldl :: (b -> a -> b) -> b -> [a] -> b
+foldl f e []     = e
+foldl f e (x:xs) = foldl f (f e x) xs
+
+foldr :: (a -> b -> b) -> b -> [a] -> b
+foldr f e []     = e
+foldr f e (x:xs) = f x (foldr f e xs)
+
+foldlR :: (b -> a -> b) -> b -> [a] -> b
+foldlR f e xs = (foldr step id) xs e
+  where
+    step x g e' = g (f e' x)

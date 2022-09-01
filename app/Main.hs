@@ -5,8 +5,7 @@
 
 module Main where
 
-import Prelude hiding (pi, repeat, head, tail, filter, iterate, succ)
-
+import Prelude hiding (foldr, foldl, pi, repeat, head, tail, filter, iterate, succ)
 
 {- Algorithms -}
 import Fibonacci
