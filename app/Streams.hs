@@ -8,6 +8,8 @@ import Data.List hiding (repeat)
 {- Streams of Fibonacci numbers -}
 data Stream a = a :< Stream a
 
+data StreamF a k = a :<< k
+
 repeat :: a -> Stream a
 repeat x = x :< repeat x
 

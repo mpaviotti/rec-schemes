@@ -4,6 +4,8 @@
 
 module RecSchemes where
 
+import Prelude hiding (foldr, foldl)
+
 {- (Co)-Fixpoints and (Co)-Free Monads -}
 data Fix f = In { inOp :: f(Fix f) }
 data CoFix f = OutOp { out :: f (CoFix f) }
@@ -81,7 +83,6 @@ hylo alg coalg = alg . fmap (hylo alg coalg) . coalg
 
 
 -- Exercise, foldr, foldl and foldl using foldr
-
 foldl :: (b -> a -> b) -> b -> [a] -> b
 foldl f e []     = e
 foldl f e (x:xs) = foldl f (f e x) xs
