@@ -71,6 +71,24 @@ instance (Show (Fix NatF)) where
       alg ZeroF = 0
       alg (SuccF n') = n' + 1
 
+instance (Ord (Fix NatF)) where
+  compare :: Fix NatF -> Fix NatF -> Ordering
+  compare x y = if x < y then LT else (if x > y then GT else EQ)
+  (<) :: Fix NatF -> Fix NatF -> Bool
+  (In ZeroF) < (In (SuccF _)) = True
+  (In (SuccF n)) < (In ZeroF) = False
+  (In (SuccF n)) < (In (SuccF m)) = n < m
+  (<=) :: Fix NatF -> Fix NatF -> Bool
+  x <= y = not (x > y)
+  (>) :: Fix NatF -> Fix NatF -> Bool
+  (In (SuccF n)) > (In ZeroF) = True
+  (In ZeroF) > (In (SuccF _)) = False
+  (In (SuccF n)) > (In (SuccF m)) = n > m
+  (>=) :: Fix NatF -> Fix NatF -> Bool
+  x >= y = not (x < y)
+  max :: Fix NatF -> Fix NatF -> Fix NatF
+  x `max` y = if x <= y then x else y
+
 succ :: Fix NatF -> Fix NatF
 succ n = In (SuccF n)
 
