@@ -1,29 +1,18 @@
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE DeriveFunctor #-}
 
 {-# LANGUAGE RankNTypes #-}
 
 module RecSchemes where
 
+
 import Prelude hiding (foldr, foldl)
+import Control.Comonad
 
 {- (Co)-Fixpoints and (Co)-Free Monads -}
 data Fix f = In { inOp :: f(Fix f) }
 data CoFix f = OutOp { out :: f (CoFix f) }
-
-data CoFree g a = CoFree a (g (CoFree g a)) deriving Functor
-data Free f a = Var a | Op (f (Free f a)) deriving Functor
-
-coeval :: Functor g => (x -> g x) -> x -> CoFree g x
-coeval coalg x = CoFree x (fmap (coeval coalg) (coalg x))
-
-chead :: CoFree g a -> a
-chead (CoFree x _) = x
-
-ctail :: CoFree g a -> g (CoFree g a)
-ctail (CoFree _ y) = y
-
-comult :: Functor g => CoFree g a -> CoFree g (CoFree g a)
-comult = coeval ctail
 
 
 {- Fold -}
@@ -61,26 +50,49 @@ proj1 (x, y) = x
 mutu :: Functor f => (f (a, b) -> a) -> (f (a, b) -> b) -> Fix f -> (a, b)
 mutu algLeft algRight = (algLeft /\ algRight) . fmap (mutu algLeft algRight) . inOp
 
+data CoFree g a = a :< g (CoFree g a)
+data Free f a = Var a | Op (f (Free f a)) deriving Functor
+
+coiter :: Functor g => (x -> y) -> (x -> g x) -> x -> CoFree g y
+coiter f coalg x = f x :< (fmap (coiter f coalg) (coalg x))
+
+coeval :: Functor g =>  (x -> g x) -> x -> CoFree g x
+coeval = coiter id
+
+unwrap :: CoFree g a -> g (CoFree g a)
+unwrap (_ :< y) = y
+
+instance Functor g => Functor (CoFree g) where
+  fmap :: (a -> b) -> CoFree g a -> CoFree g b
+  fmap f (x :< k) = f x :< fmap (fmap f) k
+
+instance Functor f => Comonad (CoFree f) where
+  extract :: CoFree f a -> a
+  extract (hd :< _) = hd
+  duplicate :: CoFree f a -> CoFree f (CoFree f a)
+  duplicate = coiter id unwrap
+  extend :: (CoFree f a -> b) -> CoFree f a -> CoFree f b
+  extend k = coiter k unwrap
+
 {- Recursion Schemes from CoMonads -}
-rsfc :: forall d g b. (Functor g, Functor d) =>
-                (forall x. d (CoFree g x) -> CoFree g (d x)) ->
-                (d (CoFree g b) -> b) ->
-                Fix d -> b
-rsfc lambda calg = chead . fold (fmap calg . lambda . (fmap comult))
+rsfc :: forall n d a. (Comonad n, Functor d) =>
+                (forall x. d (n x) -> n (d x)) ->
+                (d (n a) -> a) ->
+                Fix d -> a
+rsfc lambda alg = extract . fold (fmap alg . lambda . (fmap duplicate))
 
 {- The canonical definition from the paper -}
-rsfcc :: forall g b. Functor g => (g (CoFree g b) -> b) -> Fix g -> b
-rsfcc calg = chead . fold (fmap calg . lambda . (fmap comult))
+histo :: forall g b. Functor g => (g (CoFree g b) -> b) -> Fix g -> b
+histo calg = rsfc lambda calg
   where
-    lambda :: Functor g => g (CoFree g a) -> CoFree g (g a)
-    lambda = fmap (fmap chead) . coeval (fmap ctail)
+    lambda :: Functor g => forall x. g (CoFree g x) -> CoFree g (g x)
+    lambda = fmap (fmap extract) . coeval (fmap unwrap)
 
 unfold :: (Functor f) => (a -> f a) -> a -> CoFix f
 unfold coalg = OutOp . fmap (unfold coalg) . coalg
 
 hylo :: (Functor f) => (f b -> b) -> (a -> f a) -> a -> b
 hylo alg coalg = alg . fmap (hylo alg coalg) . coalg
-
 
 -- Exercise, foldr, foldl and foldl using foldr
 foldl :: (b -> a -> b) -> b -> [a] -> b

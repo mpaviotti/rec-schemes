@@ -16,14 +16,15 @@ verifyOrder [] = True
 verifyOrder [x] = True
 verifyOrder (x:y:xs) = x <= y && (verifyOrder (y:xs))
 
+maximunI :: [(Int, a)] -> (Int, a)
+maximunI [x]      = x
+maximunI ((n, xs):xxs) = let r = maximunI xxs in if n > fst r then (n, xs) else r
+
 {-- The longest Increasing Sequence : Naive Version --}
 lis :: Ord a => [a] -> [a]
 lis []     = []
 lis ys@(x:xs) = snd . maximunI . map (\x -> (length x, x))  . (filter verifyOrder) . sublists $ ys
   where
-    maximunI :: [(Int, a)] -> (Int, a)
-    maximunI [x]      = x
-    maximunI ((n, xs):xxs) = let r = maximunI xxs in if n > fst r then (n, xs) else r
 
 {--
  Smarter version
@@ -39,6 +40,10 @@ so we have to consider both -5, 2, 3, 9 which has length 4
 and [2, 3,9] to which we can add later -4, -3 which make it length 5
 --}
 
-lis' :: (Ord a) => [a] -> (Int, Int)
-lis' []     = (0,0)
-lis' (x:xs) = (1 + maximun [fst . lis' $ sub |  sub <- tails xs, x < head sub || null sub], snd . lis' $ xs )
+lis' :: (Ord a) => [a] -> ((Int, [a]), (Int, [a]))
+lis' []     = ((0,[]),(0,[]))
+lis' (x:xs) = (a, b)
+  where
+    a = let pair = maximunI [fst . lis' $ sub |  sub <- tails xs, null sub || x < head sub]
+        in (fst pair + 1, x:(snd pair))
+    b = maximunI [a,(snd . lis' $ xs)]
